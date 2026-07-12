@@ -1,13 +1,17 @@
-import { Menu, Search } from "lucide-react";
+import { Menu, Moon, Search, Sun } from "lucide-react";
 import { Outlet, useLocation } from "react-router-dom";
+import { CommandPalette } from "@/common/components/CommandPalette";
 import { navigationItems } from "@/common/constants/navigation";
 import { useAuthStore } from "@/common/store/authStore";
+import { useThemeStore } from "@/common/store/themeStore";
 import { Sidebar } from "@/common/layouts/Sidebar";
 import { Button } from "@/common/components/ui/Button";
 
 export function AppLayout() {
   const location = useLocation();
   const currentUser = useAuthStore((state) => state.currentUser);
+  const mode = useThemeStore((state) => state.mode);
+  const toggleMode = useThemeStore((state) => state.toggleMode);
   const activeItem = navigationItems.find((item) => location.pathname.startsWith(item.path));
 
   return (
@@ -29,12 +33,17 @@ export function AppLayout() {
               <Search className="h-4 w-4 text-muted-foreground" />
               <input
                 className="h-10 flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-muted-foreground"
-                placeholder="Search assets, employees, bookings"
+                placeholder="Search or press Ctrl+K"
               />
             </div>
-            <div className="min-w-0 text-right">
-              <p className="truncate text-sm font-medium">{currentUser.name}</p>
-              <p className="truncate text-xs text-muted-foreground">{currentUser.role.replace("_", " ")}</p>
+            <div className="flex items-center gap-3">
+              <Button className="h-9 w-9 px-0" variant="outline" onClick={toggleMode} aria-label="Toggle theme">
+                {mode === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+              </Button>
+              <div className="min-w-0 text-right">
+                <p className="truncate text-sm font-medium">{currentUser.name}</p>
+                <p className="truncate text-xs text-muted-foreground">{currentUser.role.replace("_", " ")}</p>
+              </div>
             </div>
           </div>
         </header>
@@ -42,6 +51,7 @@ export function AppLayout() {
           <Outlet />
         </main>
       </div>
+      <CommandPalette />
     </div>
   );
 }

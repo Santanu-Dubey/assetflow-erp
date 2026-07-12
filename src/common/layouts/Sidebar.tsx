@@ -9,7 +9,7 @@ export function Sidebar() {
   const visibleItems = navigationItems.filter((item) => item.allowedRoles.includes(role));
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-border bg-card lg:block">
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-border bg-card/95 backdrop-blur lg:block">
       <div className="flex h-16 items-center gap-3 border-b border-border px-6">
         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <Boxes className="h-5 w-5" />
@@ -19,7 +19,7 @@ export function Sidebar() {
           <p className="text-xs text-muted-foreground">ERP Operations</p>
         </div>
       </div>
-      <nav className="space-y-1 p-4">
+      <nav className="h-[calc(100vh-4rem)] space-y-1 overflow-y-auto p-4">
         {visibleItems.map((item) => {
           const Icon = item.icon;
 

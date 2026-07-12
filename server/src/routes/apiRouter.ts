@@ -1,9 +1,16 @@
 import { Router } from "express";
 import { allocationRouter } from "../modules/allocation/allocation.routes.js";
 import { assetsRouter } from "../modules/assets/assets.routes.js";
+import { activityLogsRouter } from "../modules/activity-logs/activity-logs.routes.js";
+import { auditsRouter } from "../modules/audits/audits.routes.js";
 import { bookingRouter } from "../modules/booking/booking.routes.js";
 import { dashboardRouter } from "../modules/dashboard/dashboard.routes.js";
+import { maintenanceRouter } from "../modules/maintenance/maintenance.routes.js";
+import { notificationsRouter } from "../modules/notifications/notifications.routes.js";
 import { organizationRouter } from "../modules/organization/organization.routes.js";
+import { profileRouter } from "../modules/profile/profile.routes.js";
+import { reportsRouter } from "../modules/reports/reports.routes.js";
+import { settingsRouter } from "../modules/settings/settings.routes.js";
 
 export const apiRouter = Router();
 
@@ -12,3 +19,10 @@ apiRouter.use("/organization", organizationRouter);
 apiRouter.use("/assets", assetsRouter);
 apiRouter.use("/allocations", allocationRouter);
 apiRouter.use("/bookings", bookingRouter);
+apiRouter.use("/maintenance", maintenanceRouter);
+apiRouter.use("/audits", auditsRouter);
+apiRouter.use("/notifications", notificationsRouter);
+apiRouter.use("/reports", reportsRouter);
+apiRouter.use("/settings", settingsRouter);
+apiRouter.use("/activity-logs", activityLogsRouter);
+apiRouter.use("/profile", profileRouter);
