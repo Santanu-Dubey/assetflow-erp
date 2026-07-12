@@ -1,0 +1,47 @@
+import { Menu, Search } from "lucide-react";
+import { Outlet, useLocation } from "react-router-dom";
+import { navigationItems } from "@/common/constants/navigation";
+import { useAuthStore } from "@/common/store/authStore";
+import { Sidebar } from "@/common/layouts/Sidebar";
+import { Button } from "@/common/components/ui/Button";
+
+export function AppLayout() {
+  const location = useLocation();
+  const currentUser = useAuthStore((state) => state.currentUser);
+  const activeItem = navigationItems.find((item) => location.pathname.startsWith(item.path));
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Sidebar />
+      <div className="lg:pl-72">
+        <header className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur">
+          <div className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+            <div className="flex min-w-0 items-center gap-3">
+              <Button className="h-9 w-9 px-0 lg:hidden" variant="ghost" aria-label="Open navigation">
+                <Menu className="h-5 w-5" />
+              </Button>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">AssetFlow / {activeItem?.label ?? "Workspace"}</p>
+                <h1 className="truncate text-lg font-semibold">{activeItem?.label ?? "Workspace"}</h1>
+              </div>
+            </div>
+            <div className="hidden w-full max-w-sm items-center rounded-md border border-border bg-card px-3 sm:flex">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <input
+                className="h-10 flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-muted-foreground"
+                placeholder="Search assets, employees, bookings"
+              />
+            </div>
+            <div className="min-w-0 text-right">
+              <p className="truncate text-sm font-medium">{currentUser.name}</p>
+              <p className="truncate text-xs text-muted-foreground">{currentUser.role.replace("_", " ")}</p>
+            </div>
+          </div>
+        </header>
+        <main className="px-4 py-6 sm:px-6 lg:px-8">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+}
