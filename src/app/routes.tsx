@@ -1,9 +1,16 @@
 import { ReactElement, Suspense, lazy } from "react";
 import { Navigate, createBrowserRouter } from "react-router-dom";
 import { AppLayout } from "@/common/layouts/AppLayout";
+import { RequireAuth } from "@/common/middleware/RequireAuth";
 import { RequireRole } from "@/common/middleware/RequireRole";
 import type { UserRole } from "@/common/types/auth";
 
+const LoginPage = lazy(() =>
+  import("@/modules/auth/pages/LoginPage").then((module) => ({ default: module.LoginPage })),
+);
+const SignupPage = lazy(() =>
+  import("@/modules/auth/pages/SignupPage").then((module) => ({ default: module.SignupPage })),
+);
 const DashboardPage = lazy(() =>
   import("@/modules/dashboard/pages/DashboardPage").then((module) => ({ default: module.DashboardPage })),
 );
@@ -57,8 +64,28 @@ function routeElement(element: ReactElement, allowedRoles: UserRole[] = allRoles
 
 export const router = createBrowserRouter([
   {
+    path: "/login",
+    element: (
+      <Suspense fallback={<div className="p-6 text-sm">Loading login...</div>}>
+        <LoginPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/signup",
+    element: (
+      <Suspense fallback={<div className="p-6 text-sm">Loading signup...</div>}>
+        <SignupPage />
+      </Suspense>
+    ),
+  },
+  {
     path: "/",
-    element: <AppLayout />,
+    element: (
+      <RequireAuth>
+        <AppLayout />
+      </RequireAuth>
+    ),
     children: [
       { index: true, element: <Navigate to="/dashboard" replace /> },
       { path: "dashboard", element: routeElement(<DashboardPage />) },

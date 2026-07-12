@@ -15,6 +15,10 @@ export function ProfilePage() {
     updateSettings({ theme: form.get("theme") as "LIGHT" | "DARK" | "SYSTEM", compactMode: form.get("compactMode") === "on" });
   };
 
+  if (!user) {
+    return null;
+  }
+
   return (
     <ModuleOverview
       title="Profile & Preferences"
@@ -23,7 +27,7 @@ export function ProfilePage() {
         { label: "Role", value: user.role.replace("_", " "), tone: "info" },
         { label: "Preferences", value: "Ready", tone: "success" },
         { label: "Shortcuts", value: "Ctrl+K", tone: "warning" },
-        { label: "Session", value: "Mocked", tone: "neutral" },
+        { label: "Session", value: "Active", tone: "success" },
       ]}
       workflows={[
         "Profile data consumed from pluggable authentication context",

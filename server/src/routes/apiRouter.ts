@@ -2,6 +2,7 @@ import { Router } from "express";
 import { allocationRouter } from "../modules/allocation/allocation.routes.js";
 import { assetsRouter } from "../modules/assets/assets.routes.js";
 import { activityLogsRouter } from "../modules/activity-logs/activity-logs.routes.js";
+import { authRouter } from "../modules/auth/auth.routes.js";
 import { auditsRouter } from "../modules/audits/audits.routes.js";
 import { bookingRouter } from "../modules/booking/booking.routes.js";
 import { dashboardRouter } from "../modules/dashboard/dashboard.routes.js";
@@ -14,6 +15,7 @@ import { settingsRouter } from "../modules/settings/settings.routes.js";
 
 export const apiRouter = Router();
 
+apiRouter.use("/auth", authRouter);
 apiRouter.use("/dashboard", dashboardRouter);
 apiRouter.use("/organization", organizationRouter);
 apiRouter.use("/assets", assetsRouter);

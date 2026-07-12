@@ -5,7 +5,11 @@ import { useAuthStore } from "@/common/store/authStore";
 import { cn } from "@/common/utils/cn";
 
 export function Sidebar() {
-  const role = useAuthStore((state) => state.currentUser.role);
+  const role = useAuthStore((state) => state.currentUser?.role);
+  if (!role) {
+    return null;
+  }
+
   const visibleItems = navigationItems.filter((item) => item.allowedRoles.includes(role));
 
   return (

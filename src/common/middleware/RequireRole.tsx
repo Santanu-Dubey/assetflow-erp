@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/common/store/authStore";
 import type { UserRole } from "@/common/types/auth";
 
@@ -9,6 +10,12 @@ type RequireRoleProps = {
 
 export function RequireRole({ allowedRoles, children }: RequireRoleProps) {
   const currentUser = useAuthStore((state) => state.currentUser);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const location = useLocation();
+
+  if (!isAuthenticated || !currentUser) {
+    return <Navigate replace to="/login" state={{ from: location.pathname }} />;
+  }
 
   if (!allowedRoles.includes(currentUser.role)) {
     return (

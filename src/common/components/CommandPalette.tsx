@@ -9,9 +9,9 @@ export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
-  const role = useAuthStore((state) => state.currentUser.role);
+  const role = useAuthStore((state) => state.currentUser?.role);
   const items = navigationItems.filter(
-    (item) => item.allowedRoles.includes(role) && item.label.toLowerCase().includes(query.toLowerCase()),
+    (item) => role && item.allowedRoles.includes(role) && item.label.toLowerCase().includes(query.toLowerCase()),
   );
 
   useEffect(() => {

@@ -7,3 +7,10 @@ export type AuthenticatedUser = {
   role: UserRole;
   departmentId?: string;
 };
+
+export type AuthAccount = AuthenticatedUser & {
+  passwordHash: string;
+  status: "ACTIVE" | "INACTIVE" | "SUSPENDED";
+  createdAt: string;
+  lastLoginAt?: string;
+};
