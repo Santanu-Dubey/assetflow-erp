@@ -1,8 +1,22 @@
 import { Bell, Building2, Palette, SlidersHorizontal } from "lucide-react";
+import { FormEvent } from "react";
 import { ModuleOverview } from "@/common/components/ModuleOverview";
+import { Button } from "@/common/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/common/components/ui/Card";
+import { useErpStore } from "@/common/store/erpStore";
 
 export function SettingsPage() {
+  const { settings, updateSettings } = useErpStore();
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    updateSettings({
+      theme: form.get("theme") as "LIGHT" | "DARK" | "SYSTEM",
+      compactMode: form.get("compactMode") === "on",
+      bookingReminderMinutes: Number(form.get("bookingReminderMinutes") || 15),
+    });
+  };
+
   return (
     <ModuleOverview
       title="Settings"
@@ -25,6 +39,12 @@ export function SettingsPage() {
           <CardTitle>Preference Areas</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
+          <form className="space-y-3 rounded-md border border-border p-3" onSubmit={onSubmit}>
+            <select className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" name="theme" defaultValue={settings.theme}><option>LIGHT</option><option>DARK</option><option>SYSTEM</option></select>
+            <input className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" name="bookingReminderMinutes" defaultValue={settings.bookingReminderMinutes} type="number" />
+            <label className="flex items-center gap-2 text-sm"><input defaultChecked={settings.compactMode} name="compactMode" type="checkbox" /> Compact mode</label>
+            <Button type="submit">Save Settings</Button>
+          </form>
           {[
             [SlidersHorizontal, "General"],
             [Building2, "Departments and categories"],

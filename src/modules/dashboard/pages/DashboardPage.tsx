@@ -3,24 +3,23 @@ import { PageHeader } from "@/common/components/PageHeader";
 import { Badge } from "@/common/components/ui/Badge";
 import { Button } from "@/common/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/common/components/ui/Card";
-
-const kpis = [
-  { label: "Assets Available", value: "248", icon: PackageCheck, tone: "success" },
-  { label: "Assets Allocated", value: "617", icon: ClipboardCheck, tone: "info" },
-  { label: "Maintenance Today", value: "12", icon: Wrench, tone: "warning" },
-  { label: "Active Bookings", value: "34", icon: CalendarClock, tone: "info" },
-  { label: "Pending Transfers", value: "9", icon: ArrowRight, tone: "warning" },
-  { label: "Upcoming Returns", value: "21", icon: PackageX, tone: "danger" },
-] as const;
-
-const activities = [
-  "Laptop AF-0114 allocated to Priya Nair",
-  "Room B2 booking confirmed for Operations sync",
-  "Projector AF-0042 return marked overdue",
-  "Transfer request created for Tablet AF-0199",
-];
+import { useNavigate } from "react-router-dom";
+import { useErpStore } from "@/common/store/erpStore";
 
 export function DashboardPage() {
+  const navigate = useNavigate();
+  const { assets, allocations, bookings, maintenance, transfers, activityLogs } = useErpStore();
+  const activeAllocations = allocations.filter((item) => !item.returnedAt);
+  const overdue = activeAllocations.filter((item) => item.expectedReturnDate && item.expectedReturnDate < new Date().toISOString().slice(0, 10));
+  const kpis = [
+    { label: "Assets Available", value: assets.filter((item) => item.status === "AVAILABLE").length, icon: PackageCheck },
+    { label: "Assets Allocated", value: assets.filter((item) => item.status === "ALLOCATED").length, icon: ClipboardCheck },
+    { label: "Maintenance Open", value: maintenance.filter((item) => item.status !== "RESOLVED" && item.status !== "REJECTED").length, icon: Wrench },
+    { label: "Active Bookings", value: bookings.filter((item) => item.status === "UPCOMING" || item.status === "ONGOING").length, icon: CalendarClock },
+    { label: "Pending Transfers", value: transfers.filter((item) => item.status === "REQUESTED").length, icon: ArrowRight },
+    { label: "Overdue Returns", value: overdue.length, icon: PackageX },
+  ];
+
   return (
     <>
       <PageHeader
@@ -29,8 +28,8 @@ export function DashboardPage() {
         actions={
           <>
             <Button>Register Asset</Button>
-            <Button variant="outline">Book Resource</Button>
-            <Button variant="secondary">Raise Maintenance</Button>
+            <Button variant="outline" onClick={() => navigate("/booking")}>Book Resource</Button>
+            <Button variant="secondary" onClick={() => navigate("/maintenance")}>Raise Maintenance</Button>
           </>
         }
       />
@@ -59,9 +58,9 @@ export function DashboardPage() {
             <CardTitle>Recent Activities</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {activities.map((activity) => (
-              <div className="flex items-center justify-between rounded-md border border-border p-3" key={activity}>
-                <span className="text-sm">{activity}</span>
+            {activityLogs.slice(0, 6).map((activity) => (
+              <div className="flex items-center justify-between rounded-md border border-border p-3" key={activity.id}>
+                <span className="text-sm">{activity.message}</span>
                 <Badge tone="neutral">Today</Badge>
               </div>
             ))}
@@ -72,12 +71,14 @@ export function DashboardPage() {
             <CardTitle>Overdue Returns</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {["Projector AF-0042", "Laptop AF-0118", "Vehicle AF-0301"].map((asset) => (
-              <div className="rounded-md bg-destructive/10 p-3" key={asset}>
-                <p className="text-sm font-medium text-destructive">{asset}</p>
+            {overdue.length === 0 ? <p className="text-sm text-muted-foreground">No overdue returns right now.</p> : overdue.map((allocation) => {
+              const asset = assets.find((item) => item.id === allocation.assetId);
+              return (
+              <div className="rounded-md bg-destructive/10 p-3" key={allocation.id}>
+                <p className="text-sm font-medium text-destructive">{asset?.tag} {asset?.name}</p>
                 <p className="text-xs text-muted-foreground">Expected return date has passed</p>
               </div>
-            ))}
+            )})}
           </CardContent>
         </Card>
       </section>

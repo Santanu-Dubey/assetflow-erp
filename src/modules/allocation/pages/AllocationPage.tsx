@@ -1,10 +1,41 @@
 import { ArrowRightLeft, RotateCcw } from "lucide-react";
+import { FormEvent, useState } from "react";
 import { PageHeader } from "@/common/components/PageHeader";
 import { Badge } from "@/common/components/ui/Badge";
 import { Button } from "@/common/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/common/components/ui/Card";
+import { useErpStore } from "@/common/store/erpStore";
 
 export function AllocationPage() {
+  const [message, setMessage] = useState("");
+  const { assets, employees, departments, allocations, transfers, allocateAsset, returnAsset, requestTransfer, approveTransfer, rejectTransfer } = useErpStore();
+  const activeAllocations = allocations.filter((allocation) => !allocation.returnedAt);
+
+  const onAllocate = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const result = allocateAsset({
+      assetId: String(form.get("assetId")),
+      employeeId: String(form.get("employeeId") || ""),
+      departmentId: String(form.get("departmentId") || ""),
+      expectedReturnDate: String(form.get("expectedReturnDate")),
+    });
+    setMessage(result.message);
+    if (result.ok) event.currentTarget.reset();
+  };
+
+  const onTransfer = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    requestTransfer({
+      allocationId: String(form.get("allocationId")),
+      toEmployeeId: String(form.get("toEmployeeId") || ""),
+      reason: String(form.get("reason")),
+    });
+    setMessage("Transfer request created.");
+    event.currentTarget.reset();
+  };
+
   return (
     <>
       <PageHeader
@@ -19,6 +50,7 @@ export function AllocationPage() {
           </>
         }
       />
+      {message ? <div className="mb-4 rounded-md border border-border bg-card p-3 text-sm">{message}</div> : null}
       <section className="grid gap-6 xl:grid-cols-3">
         <Card className="xl:col-span-2">
           <CardHeader>
@@ -36,41 +68,46 @@ export function AllocationPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {[
-                  ["AF-0114", "Priya Nair", "Operations", "2026-07-20", "Active"],
-                  ["AF-0042", "Raj Malhotra", "Facilities", "2026-07-08", "Overdue"],
-                  ["AF-0199", "Anika Rao", "HR", "2026-07-30", "Transfer Requested"],
-                ].map(([asset, holder, department, expectedReturn, status]) => (
-                  <tr key={asset}>
-                    <td className="px-5 py-4 font-mono text-xs font-semibold">{asset}</td>
-                    <td className="px-5 py-4">{holder}</td>
-                    <td className="px-5 py-4">{department}</td>
-                    <td className="px-5 py-4">{expectedReturn}</td>
+                {activeAllocations.map((allocation) => {
+                  const asset = assets.find((item) => item.id === allocation.assetId);
+                  const status = allocation.expectedReturnDate < new Date().toISOString().slice(0, 10) ? "Overdue" : "Active";
+                  return (
+                  <tr key={allocation.id}>
+                    <td className="px-5 py-4 font-mono text-xs font-semibold">{asset?.tag}</td>
+                    <td className="px-5 py-4">{employees.find((item) => item.id === allocation.employeeId)?.name ?? "-"}</td>
+                    <td className="px-5 py-4">{departments.find((item) => item.id === allocation.departmentId)?.name ?? "-"}</td>
+                    <td className="px-5 py-4">{allocation.expectedReturnDate}</td>
                     <td className="px-5 py-4">
-                      <Badge tone={status === "Overdue" ? "danger" : status === "Transfer Requested" ? "warning" : "success"}>
+                      <Badge tone={status === "Overdue" ? "danger" : "success"}>
                         {status}
                       </Badge>
+                      <Button className="ml-2 h-8" variant="outline" onClick={() => returnAsset(allocation.id, "Returned from allocation page")}>Return</Button>
                     </td>
                   </tr>
-                ))}
+                )})}
               </tbody>
             </table>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Conflict Preview</CardTitle>
+            <CardTitle>Workflows</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="rounded-md border border-border bg-muted/40 p-4">
-              <p className="text-sm font-medium">Laptop AF-0114 is currently held by Priya Nair.</p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                A second allocation will be blocked and routed into the transfer request workflow.
-              </p>
-              <Button className="mt-4 w-full" variant="secondary">
-                Request Transfer
-              </Button>
-            </div>
+          <CardContent className="space-y-5">
+            <form className="space-y-3" onSubmit={onAllocate}>
+              <select className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" name="assetId">{assets.map((asset) => <option key={asset.id} value={asset.id}>{asset.tag} - {asset.name}</option>)}</select>
+              <select className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" name="employeeId"><option value="">Employee</option>{employees.map((employee) => <option key={employee.id} value={employee.id}>{employee.name}</option>)}</select>
+              <select className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" name="departmentId"><option value="">Department</option>{departments.map((department) => <option key={department.id} value={department.id}>{department.name}</option>)}</select>
+              <input className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" name="expectedReturnDate" type="date" required />
+              <Button className="w-full" type="submit">Allocate</Button>
+            </form>
+            <form className="space-y-3 border-t border-border pt-4" onSubmit={onTransfer}>
+              <select className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" name="allocationId">{activeAllocations.map((allocation) => <option key={allocation.id} value={allocation.id}>{assets.find((asset) => asset.id === allocation.assetId)?.tag}</option>)}</select>
+              <select className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" name="toEmployeeId">{employees.map((employee) => <option key={employee.id} value={employee.id}>{employee.name}</option>)}</select>
+              <input className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" name="reason" placeholder="Transfer reason" required />
+              <Button className="w-full" variant="secondary" type="submit">Request Transfer</Button>
+            </form>
+            {transfers.map((transfer) => <div className="rounded-md border border-border p-3 text-sm" key={transfer.id}>{transfer.reason}<div className="mt-2 flex gap-2"><Badge tone="warning">{transfer.status}</Badge>{transfer.status === "REQUESTED" ? <><Button className="h-8" onClick={() => approveTransfer(transfer.id)}>Approve</Button><Button className="h-8" variant="outline" onClick={() => rejectTransfer(transfer.id)}>Reject</Button></> : null}</div></div>)}
           </CardContent>
         </Card>
       </section>

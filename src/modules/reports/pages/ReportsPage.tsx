@@ -1,24 +1,34 @@
 import { BarChart, Bar, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ModuleOverview } from "@/common/components/ModuleOverview";
 import { Card, CardContent, CardHeader, CardTitle } from "@/common/components/ui/Card";
-
-const reportData = [
-  { department: "Ops", assets: 180 },
-  { department: "IT", assets: 126 },
-  { department: "HR", assets: 42 },
-  { department: "Facilities", assets: 94 },
-];
+import { Button } from "@/common/components/ui/Button";
+import { useErpStore } from "@/common/store/erpStore";
 
 export function ReportsPage() {
+  const { departments, employees, allocations, assets, bookings, maintenance } = useErpStore();
+  const reportData = departments.map((department) => ({
+    department: department.name,
+    assets: allocations.filter((allocation) => employees.find((employee) => employee.id === allocation.employeeId)?.departmentId === department.id).length,
+  }));
+  const exportCsv = () => {
+    const csv = ["Department,Assets", ...reportData.map((row) => `${row.department},${row.assets}`)].join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "assetflow-report.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <ModuleOverview
       title="Reports & Analytics"
       description="Interactive analytics for asset utilization, department allocation, bookings, maintenance frequency, and overdue risk."
       metrics={[
-        { label: "Report Packs", value: "12", tone: "info" },
+        { label: "Assets", value: String(assets.length), tone: "info" },
         { label: "Export Ready", value: "CSV/XLSX", tone: "success" },
-        { label: "Idle Assets", value: "64", tone: "warning" },
-        { label: "Overdue Rate", value: "3.8%", tone: "danger" },
+        { label: "Bookings", value: String(bookings.length), tone: "warning" },
+        { label: "Maintenance", value: String(maintenance.length), tone: "danger" },
       ]}
       workflows={[
         "Department-wise allocation summaries",
@@ -29,7 +39,7 @@ export function ReportsPage() {
     >
       <Card>
         <CardHeader>
-          <CardTitle>Department Allocation</CardTitle>
+          <div className="flex items-center justify-between"><CardTitle>Department Allocation</CardTitle><Button variant="outline" onClick={exportCsv}>Export CSV</Button></div>
         </CardHeader>
         <CardContent className="h-72">
           <ResponsiveContainer width="100%" height="100%">
